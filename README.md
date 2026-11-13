@@ -9,6 +9,8 @@ For each account it shows:
 - the pace (NOMINAL / ELEVATED / OVERBURN / DEPLETED) and the projected usage at reset;
 - a grey tick on each gauge marking where an even burn would put you right now.
 
+**Compact mode** (for laptop screens): the `›‹` button in the panel header shrinks the panel to a slim column of small gauges stacked on top of each other, with just the % left and the window (5H / 7D). Click `‹›` or any small gauge to go back to the full panel at its previous width. Your choice is remembered across restarts. You can also switch from a key binding or the CLI with the commands `quota.compact`, `quota.expand` and `quota.toggle-compact` (e.g. `herdr-app do quota.toggle-compact`, or bind one in `keys.json`).
+
 Nothing in this repo is tied to one person. Each machine reads **its own** logins: whatever Claude Code and Codex are signed into there, or the accounts listed in that machine's config file.
 
 ## Install (for an agent: follow these steps in order)
@@ -35,7 +37,7 @@ Requirements: the Herdr desktop app (`herdr-app` on `PATH`, opened at least once
    - Toggle, inside the row that holds the tab bar:
      `{"id":"quota-toggle","type":"block","size":{"px":150},"content":{"mod":"quota","props":{"role":"toggle"}}}`
    - Panel, inside the row that holds the `{"tab":"active"}` block:
-     `{"id":"quota-panel","type":"column","hidden":false,"size":{"px":400},"min":340,"max":640,"children":[{"id":"quota","type":"block","content":{"mod":"quota"}}]}`
+     `{"id":"quota-panel","type":"column","hidden":false,"size":{"px":400},"min":80,"max":640,"children":[{"id":"quota","type":"block","content":{"mod":"quota"}}]}`
    - The id `quota-panel` matters: the toggle shows and hides that node.
    - Herdr applies the change live. If the file is invalid, it writes the reason to `layout.error` next to it.
 

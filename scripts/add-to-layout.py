@@ -47,13 +47,17 @@ def main():
             parent["children"][i] = row
         changed.append("toggle")
 
-    if not find(root, lambda n: n.get("id") == "quota-panel")[0]:
+    panel = find(root, lambda n: n.get("id") == "quota-panel")[0]
+    if panel and panel.get("min", 0) > 80:  # older installs: let the compact mode shrink it
+        panel["min"] = 80
+        changed.append("compact min width")
+    if not panel:
         main_block, row = find(root, lambda n: (n.get("content") or {}).get("tab") == "active")
         if not main_block or row.get("type") != "row":
             sys.exit("no row holding the active-tab block found: add the panel by hand (see README)")
         row["children"].append({
             "id": "quota-panel", "type": "column", "hidden": hidden,
-            "size": {"px": 400}, "min": 340, "max": 640,
+            "size": {"px": 400}, "min": 80, "max": 640,
             "children": [{"id": "quota", "type": "block", "content": {"mod": "quota"}}],
         })
         changed.append("panel")
