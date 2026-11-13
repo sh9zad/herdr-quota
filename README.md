@@ -26,44 +26,67 @@ For each account it shows:
 
 Nothing in this repo is tied to one person. Each machine reads **its own** logins: whatever Claude Code and Codex are signed into there, or the accounts listed in that machine's config file.
 
-## Install (for an agent: follow these steps in order)
+## Install on a new machine (for an agent: follow these steps in order)
 
-Summary: clone, run `./install.sh`, verify with `herdr-app status` / `herdr-app shot`. Then set up the per-machine config: ask the person for their calendar feed URL for `nextup`, and check `gh auth status` for `prs`. Never commit a config file to this repo; it holds secrets such as calendar URLs.
+**Prerequisites:**
+- the Herdr desktop app, running, with `herdr-app` on `PATH` (opened at least once, so `~/.config/herdr-app` exists);
+- `git` and `python3` (`python3` is only needed for the layout step);
+- per mod: `quota` needs Claude Code and/or Codex signed in on this machine; `prs` needs the GitHub CLI `gh`, logged in; `nextup` needs a calendar feed URL from the person; `vitals` needs nothing.
 
+**1. Clone and install:**
+```sh
+git clone git@github.com:sh9zad/herdr-quota.git ~/Repos/herdr-quota   # private: needs GitHub access (SSH key or `gh auth login`)
+cd ~/Repos/herdr-quota && ./install.sh                               # all four; or e.g. ./install.sh quota vitals
+```
+The installer:
+- copies each chosen `mods/<name>/` to `~/.config/herdr-app/mods/<name>/`, writing `mod.json` first so Herdr doesn't auto-dock a stray copy;
+- copies `shared/hud.js` into `vitals`, `nextup` and `prs`;
+- runs `herdr-app check` on each mod, and stops at the first failure;
+- edits the **layout that's currently shown**:
+  - adds the tab-bar readout (`quota-toggle`) right after the `tabs` block;
+  - adds a right-hand column (`quota-panel`) next to the active-tab block, holding `quota` with the other mods stacked under it;
+  - if that layout is one of Herdr's shipped ones (`main`, `terminals`, `win98`), which can't change structure, it first clones it to `<name>-quota` and switches to the clone;
+  - backs up the layout as `*.bak-quota-<time>` before any change;
+- is idempotent: running it again only adds what's missing.
 
-Requirements: the Herdr desktop app (`herdr-app` on `PATH`, opened at least once so `~/.config/herdr-app` exists), plus `python3` for the layout step. The data side needs Claude Code and/or Codex signed in on the same machine.
+**2. Verify:**
+- The installer's last line before `done` should be `ok: no herdr errors`; `herdr-app status` should show `"errors": []`.
+- `herdr-app shot /tmp/herdr.png`, then look at the image. It should show:
+  - the `● CL nn | ● CX nn` readout in the tab bar;
+  - the column on the right: QUOTA, then SYSTEM // VITALS, CHRONO // NEXT UP and GITHUB // PR RADAR.
+- If the column is hidden, click the readout or run `herdr-app do layout.show --id quota-panel`.
+- If a second, full-height copy of a mod appears, Herdr auto-docked it. Delete that layout node: the one whose `content.mod` is one of these mods but whose id isn't `quota-toggle`, `quota`, `vitals`, `nextup` or `prs`.
 
-1. **Clone and run the installer:**
-   ```sh
-   git clone <this repo> ~/Repos/herdr-quota   # or wherever
-   cd ~/Repos/herdr-quota && ./install.sh
-   ```
-   The installer:
-   - copies each mod in `mods/` into `~/.config/herdr-app/mods/<name>/` (`mod.json` first, so Herdr doesn't auto-dock a stray copy);
-   - runs `herdr-app check` on it;
-   - adds the toggle and the panel to the **layout that's currently shown**. Herdr's shipped layouts (`main`, `terminals`, `win98`) can't take structural changes, so the installer first clones one of those to `<name>-quota` and switches to the clone;
-   - backs up the layout file (`*.bak-quota-<time>`) before editing it, and leaves it unchanged if the quota nodes are already there.
+**3. Per-machine setup:**
+These files live outside the repo and are never committed. Don't put their contents in the repo, a commit or a PR.
+- **quota**: usually nothing to do; the Claude Code and Codex logins are auto-detected (see *Accounts* below). On macOS the first read may make the system ask whether `security` can access the "Claude Code-credentials" keychain item; tell the person to choose **Always Allow**.
+- **prs**: run `gh auth status`. If it's not logged in, ask the person to run `gh auth login` themselves. Optional filters go in `~/.config/herdr-mods/prs.json` (see *PR radar config*).
+- **nextup**: shows "NO CALENDAR LINKED" until configured.
+  - Ask the person for their calendar's iCal feed URL (Google: Settings → the calendar → *Integrate calendar* → *Secret address in iCal format*), and for their email so declined events are hidden.
+  - Write `~/.config/herdr-mods/nextup.json` as in *Next-up calendar config*. The URL is a secret: offer to let them paste it into the file themselves.
+  - The panel picks the file up within 30 s, or straight away from its ↻ button.
+- **vitals**: nothing.
 
-2. **Verify:**
-   - `herdr-app status` should show `"errors": []`.
-   - `herdr-app shot /tmp/q.png` should show the readout in the tab bar and the panel on the right.
-   - If you see a second, full-height quota column, Herdr auto-docked a copy. Delete the layout node whose `content.mod` is `quota` and whose id is not `quota` or `quota-toggle`.
+**4. Wiring the layout by hand** (only if the script can't place things, e.g. a custom layout without a `tabs` block):
+- Edit `~/.config/herdr-app/layouts/<shown layout>.json`. Never edit a shipped layout; clone it first with `herdr-app do layout.clone --name main --as main-quota`.
+- Toggle, inside the row that holds the tab bar:
+  `{"id":"quota-toggle","type":"block","size":{"px":150},"content":{"mod":"quota","props":{"role":"toggle"}}}`
+- Column, inside the row that holds the `{"tab":"active"}` block. Keep the ids; the toggle and compact button act on `quota-panel`:
+  ```json
+  {"id":"quota-panel","type":"column","hidden":false,"size":{"px":400},"min":80,"max":640,"children":[
+    {"id":"quota","type":"block","size":{"weight":5},"content":{"mod":"quota"}},
+    {"id":"vitals","type":"block","size":{"weight":3},"min":60,"content":{"mod":"vitals","props":{"panel":"quota-panel"}}},
+    {"id":"nextup","type":"block","size":{"weight":2},"min":60,"content":{"mod":"nextup","props":{"panel":"quota-panel"}}},
+    {"id":"prs","type":"block","size":{"weight":3},"min":60,"content":{"mod":"prs","props":{"panel":"quota-panel"}}}
+  ]}
+  ```
+- Herdr applies the change live. If the file is invalid, it writes the reason to `layout.error` next to it.
 
-3. **Wiring the layout by hand** (if the script can't place things, e.g. a custom layout without a `tabs` block): edit `~/.config/herdr-app/layouts/<shown layout>.json`. Never edit a shipped layout; clone it first with `herdr-app do layout.clone --name main --as main-quota`.
-   - Toggle, inside the row that holds the tab bar:
-     `{"id":"quota-toggle","type":"block","size":{"px":150},"content":{"mod":"quota","props":{"role":"toggle"}}}`
-   - Panel, inside the row that holds the `{"tab":"active"}` block:
-     `{"id":"quota-panel","type":"column","hidden":false,"size":{"px":400},"min":80,"max":640,"children":[{"id":"quota","type":"block","content":{"mod":"quota"}}]}`
-   - The id `quota-panel` matters: the toggle shows and hides that node.
-   - Herdr applies the change live. If the file is invalid, it writes the reason to `layout.error` next to it.
+**Update:** `cd ~/Repos/herdr-quota && git pull && ./install.sh`. Per-machine config is never touched.
 
-4. **Accounts:** usually nothing to do (see below). On macOS, the first Claude read may make the system ask whether `security` can access the "Claude Code-credentials" keychain item. Choose **Always Allow**.
-
-To update later: `git pull && ./install.sh`. The installer is idempotent and never touches the account config.
-
-To uninstall:
+**Uninstall:**
 - remove `~/.config/herdr-app/mods/{quota,vitals,nextup,prs}/`;
-- delete the `quota-toggle` and `quota-panel` nodes (the stacked mods live inside `quota-panel`) from the layout. If the installer wrapped the tab bar in a `quota-tabs-row` row, unwrap it, or restore the `*.bak-quota-*` backup.
+- delete the `quota-toggle` and `quota-panel` nodes from the layout. If the installer wrapped the tab bar in a `quota-tabs-row` row, unwrap it, or restore a `*.bak-quota-*` backup.
 
 ## Accounts: auto-detect or `~/.config/herdr-quota/accounts.json`
 
