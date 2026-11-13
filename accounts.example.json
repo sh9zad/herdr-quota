@@ -1,0 +1,8 @@
+{
+  "accounts": [
+    { "provider": "claude", "name": "Claude", "credentials": { "keychain": "Claude Code-credentials" } },
+    { "provider": "claude", "name": "Claude Work", "credentials": { "file": "~/.claude-work/.credentials.json" }, "enabled": false },
+    { "provider": "codex", "name": "Codex", "home": "~/.codex" }
+  ],
+  "poll": { "claudeSeconds": 180, "codexSeconds": 60 }
+}
