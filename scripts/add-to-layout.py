@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Add the quota tab-bar readout and side panel to a herdr-app layout. Idempotent.
 
-Usage: add-to-layout.py <path to layouts/NAME.json> [--hidden]
+Usage: add-to-layout.py <path to layouts/NAME.json> [--hidden] [--stack vitals,nextup,prs]
 
 - Toggle ("quota-toggle"): placed right after the block whose mod is "tabs". If that block
   isn't already in a row, it's wrapped in one ("quota-tabs-row") that keeps its size.
 - Panel ("quota-panel" > "quota"): appended to the row that holds the active-tab block
   ({"content": {"tab": "active"}}), next to any other side panels.
+- --stack: more mods stacked in the same column under quota, in that order (each gets
+  props.panel = "quota-panel" so it can skip polling while the column is hidden).
 Writes a backup next to the file first. Prints what it did.
 """
 import json, shutil, sys, time
@@ -23,10 +25,16 @@ def find(root, pred):
     return None, None
 
 def main():
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    argv = sys.argv[1:]
+    stack = []
+    if "--stack" in argv:
+        i = argv.index("--stack")
+        stack = [m for m in (argv[i + 1] if i + 1 < len(argv) else "").split(",") if m]
+        del argv[i:i + 2]
+    args = [a for a in argv if not a.startswith("--")]
     if len(args) != 1:
         sys.exit(__doc__)
-    path, hidden = args[0], "--hidden" in sys.argv
+    path, hidden = args[0], "--hidden" in argv
     root = json.load(open(path))
     changed = []
 
@@ -61,6 +69,18 @@ def main():
             "children": [{"id": "quota", "type": "block", "content": {"mod": "quota"}}],
         })
         changed.append("panel")
+        panel = find(root, lambda n: n.get("id") == "quota-panel")[0]
+
+    WEIGHTS = {"quota": 5, "vitals": 3, "nextup": 2, "prs": 3}
+    for mod in stack:
+        if find(root, lambda n: (n.get("content") or {}).get("mod") == mod)[0]:
+            continue
+        q = find(panel, lambda n: n.get("id") == "quota")[0]
+        if q is not None and "size" not in q:
+            q["size"] = {"weight": WEIGHTS["quota"]}
+        panel["children"].append({"id": mod, "type": "block", "size": {"weight": WEIGHTS.get(mod, 3)},
+                                  "min": 60, "content": {"mod": mod, "props": {"panel": "quota-panel"}}})
+        changed.append(mod)
 
     if changed:
         shutil.copy(path, f"{path}.bak-quota-{time.strftime('%Y%m%d%H%M%S')}")
