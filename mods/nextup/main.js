@@ -118,7 +118,7 @@ export default class NextUp extends View {
     this.state = null; // { configured, events, errors, at }
     this.refresh(cx);
     cx.timer.every(30000, (cx) => {
-      if (panelHidden(this.panel)) return;
+      if (panelHidden(this.panel, "nextup")) return;
       const every = Math.max(2, Number(this.cfg?.refreshMinutes) || 10) * 60000;
       if (!this.busy && (!this.state || Date.now() - (this.state.at ?? 0) >= every)) this.refresh(cx);
       else cx.notify(); // countdowns
@@ -203,7 +203,7 @@ export default class NextUp extends View {
       if (!compact && s.errors?.length) body = v_flex().w_full().gap(8).child(body).children(s.errors.map((er) => label(`⚠ ${er}`, C.warn, 8)));
     }
     return frame({
-      title: "CHRONO", sub: "NEXT UP", accent: A, compact, compactTag: "CAL", onSize, id: "nextup-root",
+      title: "CHRONO", sub: "NEXT UP", accent: A, compact, compactTag: "CAL", onSize, id: "nextup-root", hide: "nextup",
       right: chip("nu-sync", this.busy ? "◐ SYNC" : `↻ ${hhmm(now)}`, (_e, cx) => this.refresh(cx)),
       body,
     });

@@ -1,6 +1,6 @@
 #!/bin/sh
 # Install the mods into this machine's herdr-app and stack them in the shown layout.
-#   ./install.sh                     every mod: quota (+ tab-bar toggle), vitals, nextup, prs
+#   ./install.sh                     every mod: quota (+ tab-bar toggle and section strip), vitals, nextup, prs, fleet, pipelines, jira
 #   ./install.sh quota vitals        only these (quota is always the column's anchor)
 #   ./install.sh --mod-only [mods]   copy the mods only (wire the layout yourself)
 # HERDR_APP_HOME overrides ~/.config/herdr-app, as it does for herdr-app itself.
@@ -8,7 +8,7 @@ set -eu
 
 HERE=$(cd "$(dirname "$0")" && pwd)
 APP="${HERDR_APP_HOME:-$HOME/.config/herdr-app}"
-ALL="quota vitals nextup prs"
+ALL="quota vitals nextup prs fleet pipelines jira"
 
 MOD_ONLY=0
 [ "${1:-}" = "--mod-only" ] && { MOD_ONLY=1; shift; }
@@ -31,6 +31,7 @@ done
 
 # 2. Per-machine config is never touched; absent means defaults / auto-detect.
 [ -f "$HOME/.config/herdr-quota/accounts.json" ] && echo "quota accounts: ~/.config/herdr-quota/accounts.json" || echo "quota accounts: auto-detect"
+case " $MODS " in *" jira "*) [ -f "$HOME/.config/herdr-mods/jira.json" ] || echo "jira: not configured yet; create ~/.config/herdr-mods/jira.json (README)";; esac
 case " $MODS " in *" nextup "*) [ -f "$HOME/.config/herdr-mods/nextup.json" ] || echo "nextup: no calendar yet; create ~/.config/herdr-mods/nextup.json (README)";; esac
 
 [ "$MOD_ONLY" = 1 ] && { echo "mods installed in $APP/mods"; exit 0; }
