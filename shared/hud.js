@@ -2,7 +2,7 @@
 // install.sh copies this file into each of those mods as ./hud.js; edit it here, not there.
 import { div, PathBuilder, Background } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
-import { exec, settings, layout } from "herdr";
+import { exec, settings, layout, run } from "herdr";
 
 export const C = {
   void: "#080B10", hull: "#0C1118", plate: "#101722", line: "#1B2533", lineHi: "#2A3850",
@@ -11,6 +11,7 @@ export const C = {
 };
 export const ACCENT = {
   claude: "#FF9E6B", codex: "#6CD6FF", vitals: "#A98BFF", prs: "#4BE3A4", nextup: "#FFD36B",
+  fleet: "#6CD6FF", pipelines: "#FF8AD8", jira: "#5B9BFF",
 };
 export const COMPACT_BELOW = 170; // px: narrower than this, a mod draws its compact form
 
@@ -33,8 +34,11 @@ export function find(node, id) {
   for (const ch of node.children ?? []) { const f = find(ch, id); if (f) return f; }
   return null;
 }
-// Whether the layout node this mod lives in (props.panel) is hidden: skip polling then.
-export const panelHidden = (panel) => !!(panel && find(layout(), panel)?.hidden);
+// Whether the column (props.panel) or the mod's own node is hidden: skip polling then.
+export const panelHidden = (panel, node) => {
+  const root = layout();
+  return !!((panel && find(root, panel)?.hidden) || (node && find(root, node)?.hidden));
+};
 
 export function label(text, color = C.dim, size = 10) {
   return div().font_family(mono()).text_size(Math.max(9.5, size + 1)).text_color(color).whitespace_nowrap().child(String(text));
@@ -115,7 +119,8 @@ export function sparkline(values, w, h, color) {
 }
 
 // The panel chrome every mod shares: title row, optional right side, scrolling body.
-export function frame({ title, sub, accent, right, body, compactTag, compact, onSize, id = "root" }) {
+// hide: the layout node id that the close button hides. The tab-bar section strip shows it again.
+export function frame({ title, sub, accent, right, body, compactTag, compact, onSize, id = "root", hide }) {
   const root = v_flex().id(id).size_full().bg(C.hull).relative().on_size_change(onSize).child(texture());
   if (compact) {
     return root
@@ -131,7 +136,11 @@ export function frame({ title, sub, accent, right, body, compactTag, compact, on
         .child(div().font_family(mono()).text_size(12.5).font_semibold().text_color(C.white).child(title))
         .child(div().font_family(mono()).text_size(12.5).text_color(C.dim).child("//"))
         .child(div().font_family(mono()).text_size(12.5).text_color(C.mid).child(sub)))
-      .child(right ?? div()))
+      .child(h_flex().items_center().gap(4).child(right ?? div())
+        .when(!!hide, (e) => e.child(h_flex().id(`${id}-hide`).w(20).h(20).items_center().justify_center()
+          .hover((s) => s.bg(a(C.text, 0.06)))
+          .on_click(() => run("layout.hide", { id: hide }))
+          .child(label("✕", C.dim, 9))))))
     .child(v_flex().id(`${id}-scroll`).flex_1().w_full().overflow_y_scrollbar().px(16).pt(12).pb(14).gap(12).child(body));
 }
 

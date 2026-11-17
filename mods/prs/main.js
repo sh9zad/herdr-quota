@@ -63,7 +63,7 @@ export default class Prs extends View {
     this.poll(cx);
     this.timerSecs = 120;
     cx.timer.every(30000, (cx) => {
-      if (panelHidden(this.panel) || this.busy) return;
+      if (panelHidden(this.panel, "prs") || this.busy) return;
       if (!this.data || Date.now() - (this.data.at ?? 0) >= this.timerSecs * 1000) this.poll(cx);
     });
   }
@@ -137,7 +137,7 @@ export default class Prs extends View {
         .child(section("YOUR PULL REQUESTS", d.mineCount, d.mine, false, "NO OPEN PULL REQUESTS"));
     }
     return frame({
-      title: "GITHUB", sub: "PR RADAR", accent: A, compact, compactTag: "PRS", onSize, id: "prs-root",
+      title: "GITHUB", sub: "PR RADAR", accent: A, compact, compactTag: "PRS", onSize, id: "prs-root", hide: "prs",
       right: chip("prs-sync", this.busy ? "◐ SYNC" : `↻ ${d?.at ? ago(Date.now() - d.at) : "--"}`, (_e, cx) => this.poll(cx)),
       body,
     });

@@ -15,9 +15,22 @@ Instrument-panel mods for the [Herdr](https://herdr.dev) desktop app, stacked in
 | `quota` | Claude / Codex subscription limits left | Claude Code login, Codex session logs | `~/.config/herdr-quota/accounts.json` |
 | `vitals` | CPU, memory, disk, battery gauges, CPU trace, load, thermal | `iostat`, `memory_pressure`, `pmset`, `df` (macOS); `/proc`, `/sys` (Linux) | none |
 | `nextup` | countdown ring to your next meeting, JOIN button, rest of the day | iCalendar feed URLs | `~/.config/herdr-mods/nextup.json` (**required** to show events) |
+| `fleet` | Every agent running in Herdr: blocked, working, done; click to focus it | Herdr's live agent list | none |
+| `pipelines` | Your latest GitHub Actions runs per repo, branch and workflow | `gh` CLI | `~/.config/herdr-mods/pipelines.json` (optional) |
+| `jira` | Your open tickets: blocked, in progress, to do | Jira Cloud REST API | `~/.config/herdr-mods/jira.json` (**required**) |
 | `prs` | PRs awaiting your review, your open PRs, CI and review state | `gh` CLI (its logged-in account) | `~/.config/herdr-mods/prs.json` |
 
-`./install.sh` installs all four; `./install.sh quota vitals` installs a subset. The compact button (`›‹`) in the quota header shrinks the whole column, and every mod switches to a small form when its column is narrower than 170px.
+`./install.sh` installs all seven; `./install.sh quota vitals` installs a subset. The compact button (`›‹`) in the quota header shrinks the whole column, and every mod switches to a small form when its column is narrower than 170px.
+
+## Showing and hiding sections
+
+The tab bar holds a strip of chips (`VIT NXT PRS FLT CI JIRA`), one per stacked mod. A lit chip means the section is shown. Click a chip to show or hide that section; the others share the freed space. Each section header also has a `✕` that hides it. Clicking a chip while the whole column is hidden shows the column first. Herdr remembers the choices across restarts. From a key binding: `layout.toggle {"id": "fleet"}` (ids: `vitals`, `nextup`, `prs`, `fleet`, `pipelines`, `jira`).
+
+## Fleet, pipelines and jira
+
+- **fleet**: no config. Blocked agents sort first. The age is how long this mod has seen the agent in its current status.
+- **pipelines**: shows one row per repo, branch and workflow. With no config it scans the repos of your open PRs (up to 6). Config: `{ "repos": ["acme/api"], "limit": 12, "pollSeconds": 120, "hostname": "github.com" }`.
+- **jira**: needs an Atlassian API token. Config `~/.config/herdr-mods/jira.json`: `{ "site": "acme.atlassian.net", "email": "you@acme.com", "tokenCommand": "security find-generic-password -s herdr-jira -w", "jql": "...", "limit": 15, "pollSeconds": 180 }`. Prefer `tokenCommand` (a keychain lookup) over `token`, so no secret sits in the file. The token goes to `curl` on stdin, never on the command line. The default JQL is your open assigned tickets.
 
 ## The quota mod
 
@@ -179,6 +192,9 @@ mods/quota/            main.js (view; role "toggle" = tab-bar readout + poller),
 mods/vitals/main.js    system gauges
 mods/nextup/           main.js (view, tz lookup), ics.js (iCalendar parser + recurrence expansion)
 mods/prs/main.js       GitHub PR radar
+mods/fleet/main.js     Herdr agents list
+mods/pipelines/main.js GitHub Actions runs
+mods/jira/main.js      Jira tickets
 shared/hud.js          the shared look (palette, gauge, sparkline, frame); install.sh copies it into vitals/nextup/prs
 install.sh             copy + check + stack into the shown layout
 scripts/add-to-layout.py   idempotent layout patcher (toggle after `tabs`; column next to the active tab; --stack)

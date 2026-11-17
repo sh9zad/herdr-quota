@@ -3,6 +3,7 @@
 // Roles (props.role): the panel (default), or "toggle", the tab-bar readout that shows/hides
 // the layout's "quota-panel" node. The toggle is always drawn, so it does the polling and
 // publishes through shared state; the panel only reads (and can force a resync).
+// Role "sections" is a tab-bar strip of chips. Each chip shows or hides one stacked mod.
 import { View, div, PathBuilder, Background } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
 import { run, shared, setShared, layout, settings, nextCommand, props as blockProps } from "herdr";
@@ -12,6 +13,7 @@ const PANEL = "quota-panel";
 const COMPACT_KEY = "quota.compact.v1"; // shared, so it survives restarts and other copies agree
 const WIDE_KEY = "quota.wideWidth.v1";
 const COMPACT_W = 92;
+const SECTIONS = [["vitals", "VIT"], ["nextup", "NXT"], ["prs", "PRS"], ["fleet", "FLT"], ["pipelines", "CI"], ["jira", "JIRA"]];
 const TICK = 30 * 1000;             // countdown refresh in the panel
 
 // ---- Palette: a deep-space instrument panel ----
@@ -235,6 +237,7 @@ export default class Quota extends View {
     this.role = props?.role ?? blockProps()?.role ?? "panel";
     this.width = 380;
     this.busy = false;
+    if (this.role === "sections") return;
     if (this.role === "toggle") {
       // One loop per provider; intervals come from the config and are re-read every round.
       cx.spawn(async (cx) => {
@@ -278,7 +281,28 @@ export default class Quota extends View {
   }
 
   render(cx) {
+    if (this.role === "sections") return this.renderSections();
     return this.role === "toggle" ? this.renderToggle() : this.renderPanel(cx);
+  }
+
+  // One chip per stacked mod that the layout holds. A lit chip means the section is shown.
+  // A click on a chip also shows the column when the column is hidden.
+  renderSections() {
+    const root = layout(), column = find(root, PANEL);
+    const chips = SECTIONS.filter(([id]) => find(root, id)).map(([id, tag]) => {
+      const on = !find(root, id).hidden;
+      return h_flex().id(`sec-${id}`).h(22).px(6).flex_none().items_center().rounded(4)
+        .border(1).border_color(on ? a(ACCENT.codex, 0.35) : C.line)
+        .bg(on ? a(ACCENT.codex, 0.08) : "#00000000")
+        .hover((s) => s.bg(a(C.text, 0.06)))
+        .on_mouse_down("left", (_e, cx) => cx.stop_propagation())
+        .on_click(() => {
+          if (column?.hidden) run("layout.show", { id: PANEL });
+          run(on && !column?.hidden ? "layout.hide" : "layout.show", { id });
+        })
+        .child(div().font_family(mono()).text_size(8.5).text_color(on ? C.text : C.dim).child(tag));
+    });
+    return h_flex().size_full().pr(4).gap(4).items_center().justify_end().children(chips);
   }
 
   renderToggle() {

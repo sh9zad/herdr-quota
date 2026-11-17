@@ -69,7 +69,7 @@ export default class Vitals extends View {
     this.v = null;
     this.cpuHist = [];
     const poll = (cx) => {
-      if (this.busy || panelHidden(this.panel)) return;
+      if (this.busy || panelHidden(this.panel, "vitals")) return;
       this.busy = true;
       cx.spawn(async (cx) => {
         try {
@@ -130,7 +130,7 @@ export default class Vitals extends View {
           .child(stat("POWER", v.power === "AC" ? "AC" : v.power === "BATTERY" ? "BATTERY" : "--", v.power === "BATTERY" ? C.warn : C.text)));
     }
     return frame({
-      title: "SYSTEM", sub: "VITALS", accent: A, compact, compactTag: "SYS", onSize, id: "vitals-root",
+      title: "SYSTEM", sub: "VITALS", accent: A, compact, compactTag: "SYS", onSize, id: "vitals-root", hide: "vitals",
       right: label(v ? `5S · ${this.busy ? "◉" : "○"}` : "", C.dim, 8.5),
       body,
     });

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Add the quota tab-bar readout and side panel to a herdr-app layout. Idempotent.
 
-Usage: add-to-layout.py <path to layouts/NAME.json> [--hidden] [--stack vitals,nextup,prs]
+Usage: add-to-layout.py <path to layouts/NAME.json> [--hidden] [--stack vitals,nextup,prs,fleet,pipelines,jira]
 
 - Toggle ("quota-toggle"): placed right after the block whose mod is "tabs". If that block
   isn't already in a row, it's wrapped in one ("quota-tabs-row") that keeps its size.
+- Sections strip ("quota-sections"): right after the toggle. One chip per stacked mod shows or hides it.
 - Panel ("quota-panel" > "quota"): appended to the row that holds the active-tab block
   ({"content": {"tab": "active"}}), next to any other side panels.
 - --stack: more mods stacked in the same column under quota, in that order (each gets
@@ -55,6 +56,13 @@ def main():
             parent["children"][i] = row
         changed.append("toggle")
 
+    if not find(root, lambda n: n.get("id") == "quota-sections")[0]:
+        toggle, parent = find(root, lambda n: n.get("id") == "quota-toggle")
+        i = parent["children"].index(toggle)
+        parent["children"].insert(i + 1, {"id": "quota-sections", "type": "block", "size": {"px": 290},
+                                          "content": {"mod": "quota", "props": {"role": "sections"}}})
+        changed.append("sections strip")
+
     panel = find(root, lambda n: n.get("id") == "quota-panel")[0]
     if panel and panel.get("min", 0) > 80:  # older installs: let the compact mode shrink it
         panel["min"] = 80
@@ -71,7 +79,7 @@ def main():
         changed.append("panel")
         panel = find(root, lambda n: n.get("id") == "quota-panel")[0]
 
-    WEIGHTS = {"quota": 5, "vitals": 3, "nextup": 2, "prs": 3}
+    WEIGHTS = {"quota": 5, "vitals": 3, "nextup": 2, "prs": 3, "fleet": 2, "pipelines": 3, "jira": 3}
     for mod in stack:
         if find(root, lambda n: (n.get("content") or {}).get("mod") == mod)[0]:
             continue
