@@ -16,13 +16,13 @@ Quota shows each account's five-hour and weekly percent remaining, reset countdo
 
 Click the CL/CX tab-bar readout to show or hide the column. Click the quota compact button to shrink it; click a compact quota gauge to restore its remembered wide size. RESYNC refreshes quota; the close button hides the column. Commands quota.compact, quota.expand and quota.toggle-compact provide the same width controls; no keys are required.
 
-Quota warns at 25% remaining and turns red at 10%. It reports NOMINAL, ELEVATED, OVERBURN or DEPLETED pace, and marks stale Codex signals CACHED and elapsed windows ROLLED. Missing logins and invalid configuration have explicit states. Calendar without configuration says NO CALENDAR LINKED. Click JOIN (or its compact ring) to open the detected meeting URL. Click a PR row or compact counter to open GitHub. Refresh controls reload the corresponding data. Agent working/blocked/done/idle states are handled by the existing layout; this bundle does not display or change them.
+Quota warns at 25% remaining and turns red at 10%. It reports NOMINAL, ELEVATED, OVERBURN or DEPLETED pace, and marks stale Codex signals CACHED and elapsed windows ROLLED. Missing logins and invalid configuration have explicit states. Calendar without configuration says NO CALENDAR LINKED. Click JOIN (or its compact ring) to open the detected meeting URL. Click a PR row or compact counter to open GitHub. Refresh controls reload the corresponding data. Agent working/blocked/done/idle states are handled by the existing layout; the optional Fleet panel displays them and focuses an agent when its row is clicked.
 
 Quota's always-visible toggle polls Claude every 180 seconds and Codex every 60 seconds by default, sharing results with the panel. Other panels skip polling while their containing panel is hidden. Vitals polls every five seconds; calendar and PR configuration control their refresh intervals.
 
 ## Built from
 
-Copy mods/quota, mods/vitals, mods/nextup and mods/prs, including the bundled hud.js files. Keep mod.json place set to none. Read every source before installing. Use native gpui-kit and gpui-base elements; shared/hud.js is the editable source of the three bundled helper copies.
+Copy mods/quota, mods/vitals, mods/nextup, mods/prs, mods/fleet, mods/pipelines and mods/jira, including the bundled hud.js files. Keep mod.json place set to none. Read every source before installing. Use native gpui-kit and gpui-base elements; shared/hud.js is the editable source of the six bundled helper copies.
 
 In a clone of the user's layout, add a 150px block with id quota-toggle and content {mod: "quota", props: {role: "toggle"}} next to the tabs block. Beside the active-tab block add a column with id quota-panel and the sizes above. Its children are quota, vitals, nextup and prs blocks referencing their namesake mods. Pass props {panel: "quota-panel"} to the latter three. The exact JSON is in README.md; scripts/add-to-layout.py implements this insertion. There is intentionally no layouts folder: this is a mod bundle for an existing window.
 
@@ -38,4 +38,14 @@ Keep user configurations outside the repo: ~/.config/herdr-quota/accounts.json, 
 
 ## Done when
 
-All four copied mod folders pass herdr-app check without the installer supplying missing helper files. The shown layout has no Herdr errors. Visually verify wide and compact modes in the app, toggle show/hide, restore width, and refresh. Confirm no-calendar and unauthenticated states render cleanly; with local configuration, verify quota readings, system gauges, event countdown/JOIN and PR links. Restart to verify remembered compact state. Ensure personal files and terminal contents are absent from the published preview.
+All seven copied mod folders pass herdr-app check without the installer supplying missing helper files. The shown layout has no Herdr errors. Visually verify wide and compact modes in the app, toggle show/hide, restore width, and refresh. Confirm no-calendar and unauthenticated states render cleanly; with local configuration, verify quota readings, system gauges, event countdown/JOIN and PR links. Restart to verify remembered compact state. Ensure personal files and terminal contents are absent from the published preview.
+
+## Additional sections
+
+The bundle also includes Fleet (cyan #6CD6FF, weight 2), Pipelines (pink #FF8AD8, weight 3) and Jira (blue #5B9BFF, weight 3), each with a 60px minimum height and props {panel: "quota-panel"}. The preview shows the original four-panel configuration. The default installer adds all seven; select a subset with ./install.sh quota vitals nextup prs.
+
+The tab-bar chips VIT, NXT, PRS, FLT, CI and JIRA toggle individual sections; each section header has a hide button. Clicking a chip opens the column if needed. Hidden sections stop polling.
+
+Fleet reads Herdr agents(), shows blocked (amber triangle), done (green dot), working (cyan spinner glyph) and idle (dim circle), in that priority order. Rows focus their terminal with pane.focus. Status age starts when this mod observes the status. Pipelines reads GitHub Actions through gh, grouping latest runs per repo, branch and workflow; with no config it uses repos from open PRs, up to six. Jira reads assigned open tickets from the configured Jira Cloud site through curl and a local token command, and links to tickets. Configuration lives in ~/.config/herdr-mods/pipelines.json and jira.json. Treat tokenCommand as executable trusted local configuration. Prefer a keychain command over a literal token; a literal token is also passed as an argument to the shell process. Neither file belongs in the repo. See README.md for configuration examples.
+
+Verify the additional mods pass check, section chips show/hide their target, Fleet rows focus the intended terminal, and Pipelines/Jira show useful missing-configuration or authentication states.

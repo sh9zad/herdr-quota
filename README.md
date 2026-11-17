@@ -57,11 +57,11 @@ Nothing in this repo is tied to one person. Each machine reads **its own** login
 **1. Clone and install:**
 ```sh
 git clone https://github.com/sh9zad/herdr-quota.git ~/Repos/herdr-quota
-cd ~/Repos/herdr-quota && ./install.sh                               # all four; or e.g. ./install.sh quota vitals
+cd ~/Repos/herdr-quota && ./install.sh                               # all seven; or e.g. ./install.sh quota vitals
 ```
 The installer:
 - copies each chosen `mods/<name>/` to `~/.config/herdr-app/mods/<name>/`, writing `mod.json` first so Herdr doesn't auto-dock a stray copy;
-- copies `shared/hud.js` into `vitals`, `nextup` and `prs`;
+- copies `shared/hud.js` into every mod except `quota`;
 - runs `herdr-app check` on each mod, and stops at the first failure;
 - edits the **layout that's currently shown**:
   - adds the tab-bar readout (`quota-toggle`) right after the `tabs` block;
