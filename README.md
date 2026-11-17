@@ -1,4 +1,12 @@
-# herdr-quota
+# Herdr Instrument Panel
+
+A collapsible cockpit sidebar for Herdr: Claude and Codex quota, system vitals, your next meeting, and GitHub PR radar.
+
+![Herdr Instrument Panel](preview.png)
+
+Gallery build brief: [RECIPE.md](RECIPE.md). Each mod folder includes its helpers so an agent can copy it directly.
+
+## Package
 
 Instrument-panel mods for the [Herdr](https://herdr.dev) desktop app, stacked in one right-hand column that the tab-bar readout shows and hides:
 
@@ -35,7 +43,7 @@ Nothing in this repo is tied to one person. Each machine reads **its own** login
 
 **1. Clone and install:**
 ```sh
-git clone git@github.com:sh9zad/herdr-quota.git ~/Repos/herdr-quota   # private: needs GitHub access (SSH key or `gh auth login`)
+git clone https://github.com/sh9zad/herdr-quota.git ~/Repos/herdr-quota
 cd ~/Repos/herdr-quota && ./install.sh                               # all four; or e.g. ./install.sh quota vitals
 ```
 The installer:
