@@ -24,7 +24,7 @@ Instrument-panel mods for the [Herdr](https://herdr.dev) desktop app, stacked in
 
 ## Showing and hiding sections
 
-The tab bar holds a strip of chips (`VIT NXT PRS FLT CI JIRA`), one per stacked mod. A lit chip means the section is shown. Click a chip to show or hide that section; the others share the freed space. Each section header also has a `✕` that hides it. Clicking a chip while the whole column is hidden shows the column first. Herdr remembers the choices across restarts. From a key binding: `layout.toggle {"id": "fleet"}` (ids: `vitals`, `nextup`, `prs`, `fleet`, `pipelines`, `jira`).
+The tab bar holds a strip of chips (`QTA VIT NXT PRS FLT CI JIRA`), one per stacked mod. A lit chip means the section is shown. Click a chip to show or hide that section; the others share the freed space. Each section header also has a `✕` that hides it, including Quota. The chips and close buttons keep the last open section visible. Clicking a chip while the whole column is hidden shows the column first. Herdr remembers the choices across restarts. The CL/CX readout still toggles the whole column without changing which sections are open.
 
 ## Fleet, pipelines and jira
 

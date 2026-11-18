@@ -2,7 +2,8 @@
 // install.sh copies this file into each of those mods as ./hud.js; edit it here, not there.
 import { div, PathBuilder, Background } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
-import { exec, settings, layout, run } from "herdr";
+import { exec, settings, layout } from "herdr";
+import { hideSection } from "./sections.js";
 
 export const C = {
   void: "#080B10", hull: "#0C1118", plate: "#101722", line: "#1B2533", lineHi: "#2A3850",
@@ -139,7 +140,7 @@ export function frame({ title, sub, accent, right, body, compactTag, compact, on
       .child(h_flex().items_center().gap(4).child(right ?? div())
         .when(!!hide, (e) => e.child(h_flex().id(`${id}-hide`).w(20).h(20).items_center().justify_center()
           .hover((s) => s.bg(a(C.text, 0.06)))
-          .on_click(() => run("layout.hide", { id: hide }))
+          .on_click(() => hideSection(hide))
           .child(label("✕", C.dim, 9))))))
     .child(v_flex().id(`${id}-scroll`).flex_1().w_full().overflow_y_scrollbar().px(16).pt(12).pb(14).gap(12).child(body));
 }

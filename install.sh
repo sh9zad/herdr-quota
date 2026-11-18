@@ -24,6 +24,7 @@ for m in $MODS; do
   DEST="$APP/mods/$m"
   mkdir -p "$DEST"
   cp "$HERE/mods/$m/mod.json" "$DEST/mod.json"
+  cp "$HERE/shared/sections.js" "$DEST/sections.js"
   [ "$m" = quota ] || cp "$HERE/shared/hud.js" "$DEST/hud.js"
   for f in "$HERE/mods/$m"/*.js; do cp "$f" "$DEST/"; done
   herdr-app check "$DEST"
